@@ -1,4 +1,3 @@
-from problem_unittests import test_discriminator
 from torch import nn
 
 
