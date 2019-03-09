@@ -10,7 +10,7 @@ from utils import display_images, weights_init_normal, gpu_check, load_samples, 
 display_images(loader)
 
 
-D = Discriminator(d_conv_dim)
+D = Discriminator()
 G = Generator(z_size=z_size, conv_dim=g_conv_dim)
 
 D.apply(weights_init_normal)

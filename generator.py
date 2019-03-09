@@ -39,3 +39,20 @@ def deconvolution_layer_helper(in_channels, out_channels, kernel_size, stride=2,
         layers.append(nn.BatchNorm2d(out_channels))
 
     return nn.Sequential(*layers)
+
+def generate_convolution_layers(conv_layers_number):
+    layers = []
+
+    layers.append(deconvolution_layer_helper(3, d_conv_dim, batch_norm=False))
+
+    for i in range(conv_layers_number):
+        in_channels = d_conv_dim * (2 ** i)
+        out_channels = d_conv_dim * (2 ** (i + 1))
+        layers.append(convolution_layer_helper(in_channels, out_channels))
+
+    divider = 2 * img_size / (img_size - d_kernel_size + 2 * d_padding + 2)
+    after_conv_size = img_size / (divider ** conv_layers_number)
+
+    layers.append(nn.Linear(d_conv_dim * (2 ** (conv_layers_number + 1)) * after_conv_size * after_conv_size, 1))
+
+    return layers

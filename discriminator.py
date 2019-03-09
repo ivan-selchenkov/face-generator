@@ -1,38 +1,31 @@
 from torch import nn
 
+from parameters import d_conv_dim, img_size, d_stride, d_padding, d_kernel_size, d_conv_layers
+
 
 class Discriminator(nn.Module):
 
-    def __init__(self, conv_dim):
+    def __init__(self):
         super(Discriminator, self).__init__()
 
-        # 32x32 -> 16x16
-        self.conv1 = convolution_layer_helper(3, conv_dim, 4, batch_norm=False)
-        # 16x16 -> 8x8
-        self.conv2 = convolution_layer_helper(conv_dim, conv_dim * 2, 4)
-        # 8x8 -> 4x4
-        self.conv3 = convolution_layer_helper(conv_dim * 2, conv_dim * 4, 4)
-
-        self.fc1 = nn.Linear(conv_dim * 4 * 4 * 4, 1)
-
+        self.layers = generate_convolution_layers(d_conv_layers)
         self.leaky_relu = nn.LeakyReLU()
 
     def forward(self, x):
         batch_size = x.size(0)
 
-        x = self.leaky_relu(self.conv1(x))
-        x = self.leaky_relu(self.conv2(x))
-        x = self.leaky_relu(self.conv3(x))
+        for i in range(d_conv_layers - 1):
+            x = self.leaky_relu(self.layers[i])
 
         x = x.view(batch_size, -1)
 
-        return self.fc1(x)
+        return self.layers[d_conv_layers - 1](x)
 
 
-def convolution_layer_helper(in_channels, out_channels, kernel_size, stride=2, padding=1, batch_norm=True):
+def convolution_layer_helper(in_channels, out_channels, batch_norm=True):
     layers = []
 
-    conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=not batch_norm)
+    conv = nn.Conv2d(in_channels, out_channels, d_kernel_size, d_stride, d_padding, bias=not batch_norm)
 
     layers.append(conv)
 
@@ -41,3 +34,24 @@ def convolution_layer_helper(in_channels, out_channels, kernel_size, stride=2, p
         layers.append(batch_norm)
 
     return nn.Sequential(*layers)
+
+
+def generate_convolution_layers(conv_layers_number):
+    layers = []
+
+    layers.append(convolution_layer_helper(3, d_conv_dim, batch_norm=False))
+
+    for i in range(conv_layers_number):
+        in_channels = d_conv_dim * (2 ** i)
+        out_channels = d_conv_dim * (2 ** (i + 1))
+        layers.append(convolution_layer_helper(in_channels, out_channels))
+
+    divider = 2 * img_size / (img_size - d_kernel_size + 2 * d_padding + 2)
+    after_conv_size = img_size / (divider ** conv_layers_number)
+
+    layers.append(nn.Linear(d_conv_dim * (2 ** (conv_layers_number + 1)) * after_conv_size * after_conv_size, 1))
+
+    return layers
+
+
+D = Discriminator()
