@@ -3,7 +3,7 @@ import torch.optim as optim
 from dataloader import loader
 from discriminator import Discriminator
 from generator import Generator
-from parameters import d_conv_dim, z_size, g_conv_dim, lr, beta1, beta2
+from parameters import d_conv_dim, z_size, g_conv_dim, beta1, beta2, lr_d, lr_g
 from train import train
 from utils import display_images, weights_init_normal, gpu_check, load_samples, view_samples
 
@@ -23,11 +23,11 @@ if not train_on_gpu:
 else:
     print('Training on GPU!')
 
+d_optimizer = optim.Adam(D.parameters(), lr_d, [beta1, beta2])
+g_optimizer = optim.Adam(G.parameters(), lr_g, [beta1, beta2])
 
-d_optimizer = optim.Adam(D.parameters(), lr, [beta1, beta2])
-g_optimizer = optim.Adam(G.parameters(), lr, [beta1, beta2])
 
-n_epochs = 10
+n_epochs = 30
 
 losses = train(D, d_optimizer, G, g_optimizer, n_epochs=n_epochs)
 

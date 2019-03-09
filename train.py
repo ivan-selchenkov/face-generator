@@ -2,7 +2,7 @@ import pickle as pkl
 
 from dataloader import loader
 from parameters import z_size
-from utils import gpu_check, generate_fixed_z, scale, real_loss, fake_loss, dump_samples
+from utils import gpu_check, generate_fixed_z, scale, real_loss, fake_loss, dump_samples, view_samples
 from torch import optim
 
 train_on_gpu = gpu_check()
@@ -65,6 +65,7 @@ def train(D, d_optimizer: optim.Adam, G, g_optimizer: optim.Adam, n_epochs, prin
         G.eval()  # for generating samples
         samples_z = G(fixed_z)
         samples.append(samples_z)
+        view_samples(epoch, samples)
         G.train()  # back to training mode
 
         dump_samples(samples)
